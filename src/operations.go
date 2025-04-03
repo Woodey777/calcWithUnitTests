@@ -11,7 +11,7 @@ func Add(a, b float64) (float64, error) {
 			return 0, fmt.Errorf("got overflow")
 		}
 	} else {
-		if a < math.MaxFloat64-b {
+		if a < -math.MaxFloat64-b {
 			return 0, fmt.Errorf("got overflow")
 		}
 	}

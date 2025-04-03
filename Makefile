@@ -6,7 +6,7 @@ rebuild:
 	go build -o build/calculate src/*.go
 
 test:
-	go test -v src/*.go
+	go test -v -cover src/*
 	
 coverage:
 	go test -v -coverprofile=cover.out src/*.go
@@ -14,4 +14,4 @@ coverage:
 	rm cover.out
 
 clean:
-	rm calculate
+	rm -rf build
