@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"calcWithTests/src/calculator"
 )
 
 func main() {
@@ -23,19 +24,10 @@ func main() {
 		fmt.Println("usage: ./calculate [your expression]")
 		return
 	}
-
 	expr := args[0]
-	tokens := tokenize(expr)
-
-	postfix, err := infixToPostfix(tokens)
+	result, err := calculator.Calculate(expr)
 	if err != nil {
-		fmt.Printf("converting expression to postfix: %v\n", err)
-		os.Exit(1)
-	}
-
-	result, err := evaluatePostfix(postfix)
-	if err != nil {
-		fmt.Printf("evaluating expression: %v\n", err)
+		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
 

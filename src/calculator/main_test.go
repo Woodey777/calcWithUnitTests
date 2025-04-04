@@ -1,9 +1,11 @@
-package main
+package calculator
 
 import (
 	"math"
 	"slices"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestTokenize(t *testing.T) {
@@ -17,6 +19,12 @@ func TestTokenize(t *testing.T) {
 		{expr: "2 * -23.3.5", result: []string{"2", "*", "~", "23.3.5"}},
 		{expr: "2 *ab 5", result: []string{"2", "*", "a", "b", "5"}},
 		{expr: "2   4 / 5", result: []string{"2", "4", "/", "5"}},
+		{expr: "5e-02", result: []string{"5", "d", "100"}},
+		{expr: "2e+02.0", result: []string{"2", "m", "100"}},
+		{expr: "2^3", result: []string{"2", "^", "3"}},
+		{expr: "2e+02 +  28", result: []string{"2", "m", "100", "+", "28"}},
+		{expr: "2 e+ 2", result: []string{"2", "e", "+", "2"}},
+		{expr: "3 *(2+ 4)", result: []string{"3", "*", "(", "2", "+", "4", ")"}},
 	}
 
 	for _, c := range cases {
@@ -39,6 +47,8 @@ func TestInfixToPostfix(t *testing.T) {
 		{tokens: []string{"2", "*", "~", "23.3.5"}, result: nil, isError: true},
 		{tokens: []string{"2", "*", "a", "b", "5"}, result: nil, isError: true},
 		{tokens: []string{"2", "4", "/", "5"}, result: []string{"2", "4", "5", "/"}, isError: false},
+		{tokens: []string{"3", "*", "(", "2", "+", "4", ")"}, result: []string{"3", "2", "4", "+", "*"}, isError: false},
+		{tokens: []string{"2", "^", "3"}, result: []string{"2", "3", "^"}, isError: false},
 	}
 
 	for _, c := range cases {
@@ -71,7 +81,7 @@ func TestEvaluatePostfix(t *testing.T) {
 		{tokens: []string{"1", "2", "+", "5"}, result: 0, isError: true},
 		{tokens: []string{"~"}, result: 0, isError: true},
 		{tokens: []string{"+"}, result: 0, isError: true},
-		{tokens: []string{"+"}, result: 0, isError: true},
+		{tokens: []string{"2", "3", "^"}, result: 8, isError: false},
 	}
 
 	for _, c := range cases {
@@ -87,6 +97,36 @@ func TestEvaluatePostfix(t *testing.T) {
 		if result != c.result {
 			t.Errorf("evaluatePostfix(%q) = %f, expected %f", c.tokens, result, c.result)
 		}
+	}
+}
+
+func TestCalculate(t *testing.T) {
+	type CaseCalculate struct {
+		expression string
+		result     float64
+		isError bool
+
+	}
+	cases := []CaseCalculate{
+		{expression: "1+2", result: 3, isError: false},
+		{expression: "1e+300 * 1e+300", result: 0, isError: true},
+		{expression: "1e+308 / 0.5", result: 0, isError: true},
+		{expression: "1e+308 + 1e+308", result: 0, isError: true},
+		{expression: "-1e+308 -1e+308", result: 0, isError: true},
+		{expression: "1e+300^2", result: 0, isError: true},
+		{expression: "2 * -23.3.5", result: 0, isError: true},
+		{expression: "3.375e+09^(1/3)", result: 1500, isError: false},
+	}
+
+	for _, c := range cases {
+		result, err := Calculate(c.expression)
+		if c.isError {
+			require.Error(t, err)
+		} else {
+			require.NoError(t, err)
+		}
+
+		require.Equal(t, c.result, result)
 	}
 }
 
@@ -143,6 +183,33 @@ func TestMul(t *testing.T) {
 
 		if result != c.result {
 			t.Errorf("Mul(%f, %f) = %f, expected %f", c.a, c.b, result, c.result)
+		}
+	}
+}
+
+func TestPow(t *testing.T) {
+	type CasePow struct {
+		a, b    float64
+		result  float64
+		isError bool
+	}
+	cases := []CasePow{
+		{a: 5, b: 5, result: 3125, isError: false},
+		{a: math.MaxFloat64, b: math.MaxFloat64, result: 0, isError: true},
+	}
+
+	for _, c := range cases {
+		result, err := Pow(c.a, c.b)
+		if c.isError && err == nil {
+			t.Errorf("Pow(%f, %f), expected error", c.a, c.b)
+			continue
+		} else if !c.isError && err != nil {
+			t.Errorf("Pow(%f, %f), unexpected error: %s", c.a, c.b, err)
+			continue
+		}
+
+		if result != c.result {
+			t.Errorf("Pow(%f, %f) = %f, expected %f", c.a, c.b, result, c.result)
 		}
 	}
 }
