@@ -24,9 +24,7 @@ var precedence = map[string]int{
 
 func Calculate(expression string) (float64, error) {
 	tokens := tokenize(expression)
-	fmt.Println(tokens)
 	postfix, err := infixToPostfix(tokens)
-	fmt.Println(postfix)
 	if err != nil {
 		return 0, fmt.Errorf("error while parsing: %v", err)
 	}
