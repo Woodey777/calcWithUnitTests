@@ -1,10 +1,10 @@
 package main
 
 import (
+	"calcWithTests/src/calculator"
+	"flag"
 	"fmt"
 	"os"
-	"strings"
-	"calcWithTests/src/calculator"
 )
 
 func main() {
@@ -15,17 +15,24 @@ func main() {
 		return
 	}
 
-	if strings.Compare(args[0], "-h") == 0 || strings.Compare(args[0], "--help") == 0 {
-		fmt.Println("usage: ./calculate [your expression]")
-		return
+	helpFlag := flag.Bool("help", false, "usage: ./calculate [your expression]")
+	angleUnit := flag.String("angle-unit", "radian", "Angle unit (degree or radian)")
+
+	flag.Parse()
+
+	if *helpFlag {
+		flag.Usage()
+		os.Exit(0)
 	}
-	if len(args) != 1 {
-		fmt.Println("no argument provided")
-		fmt.Println("usage: ./calculate [your expression]")
-		return
+
+	if *angleUnit != "degree" && *angleUnit != "radian" {
+		fmt.Println("Error: angle-unit must be either 'degree' or 'radian'")
+		flag.Usage()
+		os.Exit(1)
 	}
-	expr := args[0]
-	result, err := calculator.Calculate(expr)
+
+	expr := args[len(args)-1]
+	result, err := calculator.Calculate(expr, calculator.CalculatorConfig{AngleUnits: *angleUnit})
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
